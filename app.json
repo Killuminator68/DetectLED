@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-wifi-reborn",
+        {
+          "fineLocationPermission": false
+        }
+      ]
+    ],
+    "name": "gestionLED",
+    "slug": "detectled-test",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.yourcompany.yourappname",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "package": "com.vally068.gestionLED",
+      "versionCode": 1,
+      "permissions": [],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "66dc6dee-9820-4b83-8af6-bf6ce3ab7715"
+      }
+    },
+    "packagerOpts": {
+      "config": "metro.config.js",
+      "sourceExts": [
+        "expo.ts",
+        "expo.tsx",
+        "expo.js",
+        "expo.jsx",
+        "ts",
+        "tsx",
+        "js",
+        "jsx",
+        "json",
+        "wasm",
+        "svg"
+      ]
+    },
+    "owner": "killuminator68"
+  }
+}
