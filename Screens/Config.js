@@ -506,7 +506,7 @@ class Config extends React.Component
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Configuration</Text>
+      
 
       <View style={styles.pickerContainer}>
         <Text style={styles.label}>Jour :</Text>
@@ -515,6 +515,7 @@ class Config extends React.Component
           style={styles.picker}
           onValueChange={(itemValue, itemIndex) => this.setState({ selectedDay: itemValue })}
           itemStyle={styles.pickerItem}
+
         >
           {daysOfWeek.map((day, index) =>
             <Picker.Item key={index} label={day} value={day} />
@@ -528,7 +529,7 @@ class Config extends React.Component
           onPress={() => this.setState({ showStartPicker: true })}
           title={this.formatTime(this.state.startTime)}
           icon={<Icon name="time-outline" size={20} color="black" />}
-          color="#321289"
+          color="purple"
         />
         {this.state.showStartPicker && (
           <DateTimePicker
@@ -547,7 +548,7 @@ class Config extends React.Component
           onPress={() => this.setState({ showEndPicker: true })}
           title={this.formatTime(this.state.endTime)}
           icon={<Icon name="time-outline" size={20} color="black" />}
-          color="#321289"
+          color="purple"
         />
         {this.state.showEndPicker && (
           <DateTimePicker
@@ -560,12 +561,15 @@ class Config extends React.Component
         )}
       </View>
 
-      <Button
-        title="Ajouter plage"
-        onPress={this.addPlage}
-        color="#321289"
-        icon={<Icon name="add-outline" size={20} color="black" />}
-      />
+      <View style={{ borderWidth: 1, borderColor: "white", borderRadius: 5 }}>
+        <Button
+          title="Ajouter plage"
+          onPress={this.addPlage}
+          color="purple"
+          icon={<Icon name="add-outline" size={20} color="white" />}
+        />
+      </View>
+
 
       <Text style={styles.sectionTitle}>Plages de fonctionnement :</Text>
       <FlatList
@@ -716,6 +720,7 @@ class Config extends React.Component
       <TouchableOpacity
         style={styles.startButton}
         onPress={this.startButton}
+
       >
         <Icon name="play-outline" size={20} color="white" />
         {
@@ -759,7 +764,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     color: 'white',
-    backgroundColor:'#321289',
+    backgroundColor:'purple',
     flex: 2,
     fontSize: 14,
     height: 20,
@@ -805,11 +810,15 @@ const styles = StyleSheet.create({
   plageButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth:1,
+    borderColor: "white",
   },
   plageButton: {
     padding: 5,
     borderRadius: 5,
     marginLeft: 5,
+    borderWidth:1,
+    borderColor: "white",
 
   },
   plageButtonText: {
@@ -841,6 +850,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#321289',
     borderRadius: 10,
     paddingVertical: 12,
+    borderWidth:1,
+    borderColor: "white",
   },
   startButtonLabel: {
     color: 'white',

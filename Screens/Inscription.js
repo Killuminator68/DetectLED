@@ -69,7 +69,7 @@ class Inscription extends React.Component {
           />
 
           <View>
-            <Text style={styles.texttitle}>INSCRIPTION</Text>
+            
 
             <TextInput
               placeholder="nom"
@@ -136,9 +136,9 @@ class Inscription extends React.Component {
             <MyButton
               onPress={this.handleSubmit}
               val="Valider"
-              icon={<Icon name="checkmark-outline" size={20} color="black" />}
+              icon={<Icon name="checkmark-outline" size={15} color="white" />}
             />
-
+            
           
         </ScrollView>
       </SafeAreaView>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: 200,
     borderWidth: 1,
-    borderColor: '#FFFFFF',
+    borderColor: 'purple',
     color: '#FFFFFF',
     padding: 5,
     marginBottom: 10,

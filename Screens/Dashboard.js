@@ -22,6 +22,7 @@ import init from "react_native_mqtt";
 import Logo from "../assets/logo.svg";
 import ColorPicker from "react-native-wheel-color-picker";
 import Paho from "paho-mqtt";
+import  Slider  from '@react-native-community/slider';
 //import { WebView } from "react-native-webview";
 
 const { width } = Dimensions.get("window");
@@ -39,14 +40,17 @@ function Dashboard({ dispatch, isLoggedIn }) {
   const [primaryColor, setPrimaryColor] = useState("white");
   const [presence, setPresence] = useState(0);
   const [buttonState, setButtonState] = useState(0);
-  const [luminosityLevel, setLuminosityLevel] = useState("éteint");
-  const [selectedThreshold, setSelectedThreshold] = useState("éteint");
+  const [luminosityLevel, setLuminosityLevel] = useState("sombre");
+  const [selectedThreshold, setSelectedThreshold] = useState("sombre");
   const [mqttClient, setMqttClient] = useState(null);
   const [webcamState, setWebcamState] = useState(false);
   const [ledTemperature, setLedTemperature] = useState(0);
   const [pictureMessage, setPictureMessage] = useState('');
   const [pictureState, setPictureState] = useState(false);
-  //const [picturesPermission, setPicturesPermission] = useState(null);
+  const [luminosityValue, setLuminosityValue] = useState(0);
+  const [seuilInferieur, setSeuilInferieur] = useState(512);
+  const [seuilSuperieur, setSeuilSuperieur] = useState(1024);
+  const [sliderBrightness, setSliderBrightness] = useState(0);
 
 
   const initializeMQTTClient = () => {
@@ -543,49 +547,44 @@ const onConnect = (client) =>
       }
     };
 
-    const fetchLuminosityThreshold = async () => {
-      try {
-        // Envoyer une requête GET pour récupérer la valeur de luminosité depuis la base de données
-        const response = await fetch("http://10.31.251.58/api/luminosity.php", {
-          method: "POST", // Utilisez la méthode GET pour obtenir la valeur actuelle
-        });
+  const fetchLuminosityThreshold = async () => {
+  try {
+    // Envoyer une requête GET pour récupérer la valeur de luminosité depuis la base de données
+    const response = await fetch("http://10.31.251.58/api/luminosity.php", {
+      method: "POST", // Utilisez la méthode GET pour obtenir la valeur actuelle
+    });
 
-        if (response.ok) {
-          // Analyser la réponse JSON
-          const data = await response.json();
-          console.log("testL" + data);
+    if (response.ok) {
+      // Analyser la réponse JSON
+      const data = await response.json();
+      console.log("testL", data);
 
-          // Assurez-vous que "LuminosityValue" est une propriété de l'objet JSON
-          if (data !== undefined) {
-            // Déterminez le seuil en fonction de la valeur reçue
-            const luminosityValue = parseInt(data);
+      // Assurez-vous que "LuminosityValue" est une propriété de l'objet JSON
+      if (data) {
+        // Obtenez la valeur de luminosité depuis la réponse JSON
+        const luminosityValue = parseInt(data);
 
-            if (luminosityValue <= 1024) {
-              setSelectedThreshold("éteint");
-            } else if (luminosityValue <= 2048) {
-              setSelectedThreshold("faible");
-            } else if (luminosityValue <= 3072) {
-              setSelectedThreshold("moyen");
-            } else {
-              setSelectedThreshold("élevé");
-            }
-          } else {
-            console.error(
-              'La propriété "LuminosityValue" est manquante dans la réponse JSON'
-            );
-          }
+        // Mettez à jour la valeur du slider ici
+        setSelectedThreshold(luminosityValue);
+
+        // Simplifiez la logique pour déterminer le seuil en fonction de la valeur
+        if (luminosityValue <= seuilInferieur) {
+          setSelectedThreshold("sombre");
         } else {
-          console.error(
-            "Échec de la récupération de la valeur de luminosité depuis la base de données"
-          );
+          setSelectedThreshold("éclairé");
         }
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération de la valeur de luminosité depuis la base de données:",
-          error
-        );
+      } else {
+        console.error('La propriété "LuminosityValue" est manquante dans la réponse JSON');
       }
-    };
+    } else {
+      console.error("Échec de la récupération de la valeur de luminosité depuis la base de données");
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la valeur de luminosité depuis la base de données:", error);
+  }
+};
+
+
 
     // Appeler la fonction pour récupérer l'état de l'installation lors du montage du composant
     fetchInstallationStatus();
@@ -646,6 +645,45 @@ const onConnect = (client) =>
       });
 
   }, []);
+
+    const fetchUpdatedLuminosityValue = async (newValue) => {
+      const formData = new FormData();
+      formData.append("test", newValue.toString());
+    try {
+      // Envoiez la nouvelle valeur du slider à l'API pour la mettre à jour dans la base de données
+      const response = await fetch("http://10.31.251.58/api/testAppBrightnessUpdate.php", {
+        method: "POST", // Utilisez la méthode POST pour envoyer la nouvelle valeur
+        body: formData,
+      })
+      .then((response) => response.json())
+      .then((json) => {if (json != false){// La valeur a été mise à jour avec succès dans la base de données
+        console.log("Nouvelle valeur de luminosité mise à jour avec succès :", newValue);
+      }else{
+        console.error("Échec de la mise à jour de la valeur de luminosité dans la base de données");
+      }})
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la valeur de luminosité :", error);
+    }
+  };
+
+     const handleSliderChange = (value) => {
+    // Mettez à jour la valeur de luminosité en fonction de la position du slider
+    setLuminosityValue(value);
+
+    // Appel de la fonction fetch pour mettre à jour la valeur dans la base de données
+    fetchUpdatedLuminosityValue(value);
+
+    // Simplifiez la logique pour déterminer le seuil en fonction de la valeur
+    if (value <= seuilInferieur) {
+      setSelectedThreshold("sombre");
+    } else {
+      setSelectedThreshold("éclairé");
+    }
+  };
+
+
+
+
 
   const handleTemperatureMeasurement = async () => {
     try {
@@ -855,11 +893,29 @@ const onConnect = (client) =>
     }
 }
 
+    function hexToRGB(hex) {
+    if (hex.startsWith("#")) {
+      hex = hex.substring(1);
+    }
+
+    if (hex.length !== 6) {
+      throw new Error("La chaîne hexadécimale doit avoir exactement 6 caractères.");
+    }
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    console.log(`La valeur RVB de ${hex} est (${r}, ${g}, ${b})`);
+    return { r, g, b };
+  }
+
+
   return (
     <>
       {webcamState ? <MyWebComponent /> : null}
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
+      
        {/*   <Text style={styles.heading}> Gestion Système</Text>
           <View style={styles.section}>
             <Text style={styles.sectionHeading}> Caméra </Text>
@@ -879,27 +935,7 @@ const onConnect = (client) =>
             </View>
           </View>  */}
 
-          <View style={styles.section1}>
-            <Text style={styles.sectionHeading}> Installation </Text>
-            <View style={styles.toggleContainer}>
-              <Text style={styles.toggleLabel}> OFF </Text>
-              <Switch
-                trackColor={{ false: "#767577", true: "#81b0ff" }}
-                thumbColor={isInstallationOn ? "#28B463" : "#EAFAF1"}
-                onValueChange={() => {
-                  setIsInstallationOn(!isInstallationOn);
-                  handleInstallationToggle();
-                }}
-                value={isInstallationOn}
-              />
-              <Text style={styles.toggleLabel}> ON </Text>
-            </View>
-            <Text style={styles.toggleStatus}>
-              {isInstallationOn ? "Démarrer" : "Arrêter"}
-            </Text>
-          </View>
-
-        {/*  <View style={styles.cover}>
+          {/*  <View style={styles.cover}>
             <Logo
               width={"100%"}
               height={height * 0.5}
@@ -909,13 +945,37 @@ const onConnect = (client) =>
             />
           </View> */}
 
+        
+          
+
+        
+          <View style={styles.section1}>
+            <Text style={styles.sectionHeading}>Installation</Text>
+            <View style={styles.toggleContainer}>
+              <Text style={styles.toggleLabel}>OFF</Text>
+              <Switch
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={isInstallationOn ? "#28B463" : "#800080"} // Utilisez violet pour OFF et vert pour ON
+                onValueChange={() => {
+                  setIsInstallationOn(!isInstallationOn);
+                  handleInstallationToggle();
+                }}
+                value={isInstallationOn}
+              />
+              <Text style={styles.toggleLabel}>ON</Text>
+            </View>
+            <Text style={styles.toggleStatus}>
+              {isInstallationOn ? "Démarrer" : "Arrêter"}
+            </Text>
+          </View>
+
           <View style={styles.section2}>
             <Text style={styles.sectionHeading}>LED</Text>
             <View style={styles.toggleContainer}>
               <Text style={styles.toggleLabel}>OFF</Text>
               <Switch
                 trackColor={{ false: "#767577", true: "#FFFFFF" }}
-                thumbColor={isEnabledColor ? "#28B463" : "#EAFAF1"}
+                thumbColor={isEnabledColor ? "#28B463" : "#800080"} // Utilisez violet pour OFF et vert pour ON
                 onValueChange={() => setIsEnabledColor(!isEnabledColor)}
                 value={isEnabledColor}
               />
@@ -924,9 +984,10 @@ const onConnect = (client) =>
             {isEnabledColor && (
               <ColorPicker
                 onColorChange={(color) => setPrimaryColor(color)}
-                onColorChangeComplete={(color) =>
-                  console.log(`ColorP selected: ${color}`)
-                }
+                onColorChangeComplete={(color) => {
+                  console.log(`ColorP selected: ${color}`);
+                  hexToRGB(color);
+                }}
                 thumbSize={30}
                 sliderSize={30}
                 noSnap={true}
@@ -936,69 +997,34 @@ const onConnect = (client) =>
             )}
           </View>
 
-          <View style={styles.section5}>
-            <Text style={styles.sectionHeading}>Température</Text>
-            <Text style={styles.temperatureText}>{ledTemperature} °C</Text>
-             <TouchableOpacity
-                onPress={() => handleTemperatureMeasurement()}
-                style={{
-                  backgroundColor: '#321289',
-                  padding: 10,
-                  borderRadius: 5,
-                  alignItems: 'center', 
-                }}
-              >
-            <Text style={{ color: '#FFFFFF' }}>Mesurer la Température</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.section3}>
-            <View style={styles.luminosityLevels}>
-              <Text style={styles.sectionHeading}>Seuil de luminosité</Text>
+            <Text style={styles.sectionHeading}>Seuil de luminosité</Text>
 
-              <View style={styles.luminosityButtonsContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.luminosityButton,
-                    selectedThreshold === "éteint" &&
-                      styles.selectedLuminosityButton,
-                  ]}
-                  onPress={() => setSelectedThreshold("éteint")}
-                >
-                  <Text style={styles.luminosityButtonText}>Éteint</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.luminosityButton,
-                    selectedThreshold === "faible" &&
-                      styles.selectedLuminosityButton,
-                  ]}
-                  onPress={() => setSelectedThreshold("faible")}
-                >
-                  <Text style={styles.luminosityButtonText}>Faible</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.luminosityButton,
-                    selectedThreshold === "moyen" &&
-                      styles.selectedLuminosityButton,
-                  ]}
-                  onPress={() => setSelectedThreshold("moyen")}
-                >
-                  <Text style={styles.luminosityButtonText}>Moyen</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.luminosityButton,
-                    selectedThreshold === "élevé" &&
-                      styles.selectedLuminosityButton,
-                  ]}
-                  onPress={() => setSelectedThreshold("élevé")}
-                >
-                  <Text style={styles.luminosityButtonText}>Élevé</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={4095}
+              step={1}
+              value={luminosityValue}
+              onValueChange={(value) => {
+                // Mettez à jour la valeur de luminosité en fonction de la position du slider
+                setLuminosityValue(value);
+
+                // Ajoutez la logique pour déterminer le seuil en fonction de la valeur
+                if (value <= seuilInferieur) {
+                  setSelectedThreshold("sombre");
+                  setSliderBrightness(value);
+                  console.log(value + " sombre");
+                } else if (value > seuilSuperieur) {
+                  setSelectedThreshold("éclairé");
+                  setSliderBrightness(value);
+                  console.log(value + " éclairé");
+                }
+                fetchUpdatedLuminosityValue(value);
+              }}
+              thumbTintColor="purple" // Couleur de la poignée du slider
+            />
+            <Text style={styles.luminosityButtonText}>{selectedThreshold}</Text>
           </View>
 
           <View style={styles.section4}>
@@ -1014,7 +1040,7 @@ const onConnect = (client) =>
                 <Text style={styles.textdashboards}>OFF</Text>
                 <Switch
                   trackColor={{ false: "#767577", true: "#FFFFFF" }}
-                  thumbColor={isEnabledDetection ? "#28B463" : "#EAFAF1"}
+                  thumbColor={isEnabledDetection ? "#28B463" : "#800080"} // Utilisez violet pour OFF et vert pour ON
                   onValueChange={() => {
                     setIsEnabledDetection(!isEnabledDetection);
                     handleMotionToggle();
@@ -1031,40 +1057,51 @@ const onConnect = (client) =>
                     color={peopleCount === "1" ? "purple" : "grey"}
                     onPress={() => setPeopleCount("1")}
                   />
-                  <Icon
-                    name="people-outline"
-                    size={30}
-                    color={peopleCount === "2" ? "purple" : "grey"}
-                    onPress={() => setPeopleCount("2")}
-                  />
                 </View>
               )}
             </View>
           </View>
 
+          <View style={styles.section5}>
+            <Text style={styles.sectionHeading}>Température</Text>
+            <Text style={styles.temperatureText}>{ledTemperature} °C</Text>
+             <TouchableOpacity
+                onPress={() => handleTemperatureMeasurement()}
+                style={{
+                  backgroundColor: '#321289',
+                  borderWidth:1,
+                  borderColor: "white",
+                  padding: 10,
+                  borderRadius: 5,
+                  alignItems: 'center', 
+                }}
+              >
+            <Text style={{ color: '#FFFFFF' }}>Mesurer la Température</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.section6}>
-            <Text style={styles.sectionHeading}> Prise de photos </Text>
+            <Text style={styles.sectionHeading}>Prise de photos</Text>
             <View style={styles.toggleContainer}>
-              <Text style={{ ...styles.toggleLabel, color: "#FFFFFF" }}> ON </Text>
+              <Text style={{ ...styles.toggleLabel, color: "#FFFFFF" }}>OFF</Text>
               <Switch
                 trackColor={{ false: "#767577", true: "#81b0ff" }}
-                thumbColor={pictureState ? "#28B463" : "#EAFAF1"}
+                thumbColor={pictureState ? "#28B463" : "#800080"} // Utilisez violet pour OFF et vert pour ON
                 onValueChange={() => {
                   setPictureState(!pictureState);
                   handleTakePhotosButton();
                 }}
                 value={pictureState}
               />
-              <Text style={{ ...styles.toggleLabel, color: "#FFFFFF" }}> OFF </Text>
+              <Text style={{ ...styles.toggleLabel, color: "#FFFFFF" }}>ON</Text>
             </View>
           </View>
-
 
           <View style={styles.resetallButton}>
             <MyButton
               val="Réinitialiser"
               onPress={handleResetAll}
-              icon={<Icon name="refresh-outline" size={20} color="white" />}
+              icon={<Icon name="refresh-outline" size={15} color="white" />}
             />
           </View>
 
@@ -1072,9 +1109,10 @@ const onConnect = (client) =>
             <MyButton
               val="Déconnexion"
               onPress={handleLogout}
-              icon={<Icon name="log-out-outline" size={20} color="white" />}
+              icon={<Icon name="log-out-outline" size={15} color="white" />}
             />
           </View>
+          
 
 
         </ScrollView>
@@ -1100,57 +1138,47 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     marginVertical: 10,
   },
-  section: {
-    marginBottom: 20,
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 30,
-    backgroundColor: "#1E1E3B",
-    borderRadius: 10,
-    padding: 10,
-    top: 20,
-  },
   section1: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -20,
+    top: 40,
   },
   section2: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -26,
+    top: 40,
   },
   section3: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -35,
+    top: 40,
   },
   section4: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -40,
+    top: 40,
   },
   section5: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -30,
+    top: 40,
   },
    section6: {
     marginBottom: 20,
     backgroundColor: "#1E1E3B",
     borderRadius: 10,
     padding: 10,
-    top: -45,
+    top: 40,
   },
   sectionHeading: {
     textAlign: "center",
@@ -1197,16 +1225,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginTop: 10,
   },
-  luminosityButton: {
+  luminosityButton1: {
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#321289",
+    borderColor: "#fff",
   },
-  selectedLuminosityButton: {
-    backgroundColor: "purple",
-    borderColor: "purple",
+  luminosityButton2: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#fff",
+  },
+  selectedLuminosityButton1: {
+    backgroundColor: "#3d3a3a",
+    borderColor: "#3d3a3a",
+  },
+  selectedLuminosityButton2: {
+    backgroundColor: "#f6dd39",
+    borderColor: "#f6dd39",
   },
   luminosityButtonText: {
     color: "white",
@@ -1258,15 +1297,15 @@ const styles = StyleSheet.create({
   resetallButton: {
     marginBottom: 40,
     paddingBottom: 40,
-    left: 20,
-    top: -50,
+    left: 40,
+    top: 50,
     width: "100%",
   },
   logoutButton: {
     marginBottom: 40,
     paddingBottom: 40, 
-    left: 170,
-    top: -190,
+    left: 180,
+    top: -80,
     width: "100%",
   },
 });

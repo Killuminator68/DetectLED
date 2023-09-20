@@ -145,11 +145,15 @@ const Connexion = ({ navigation, route }) => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                
+             <Image
+                    source={require('../assets/logo.png')}
+                    style={styles.image}
+                  />
+                        
               { /* <Logo width={"100%"} height={"30%"} right={20} fill={primaryColor} viewBox= {`0 0 ${width} ${height}`} />*/}
               
 
-                <Text style={styles.texttitle}>CONNEXION</Text>
+             
 
                 <TextInput
                     placeholder="Email"
@@ -232,10 +236,11 @@ const styles = StyleSheet.create({
     },
 
     image: {
-        width: 180,
-        height: 180,
-        marginBottom: 30,
-    },
+    width: 180,
+    height: 180,
+    marginBottom: 20,
+    marginTop: 30,
+  },
 
     texttitle: {
         color: '#FFFFFF',
@@ -248,16 +253,18 @@ const styles = StyleSheet.create({
         height: 40,
         width: 200,
         borderWidth: 1,
-        borderColor: '#FFFFFF',
+        borderColor: 'purple',
         color: '#FFFFFF',
         padding: 10,
     },
 
     loginButton: {
-        backgroundColor: 'black',
+        backgroundColor: 'purple',
         padding: 10,
         borderRadius: 5,
         marginTop: 10,
+        borderWidth: 1,
+        borderColor: "gray"
     },
 
     loginButtonText: {
@@ -268,6 +275,7 @@ const styles = StyleSheet.create({
     link: {
         color: 'red',
         left: 0,
+        top: 20,
     },
 });
 
